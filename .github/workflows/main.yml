@@ -47,11 +47,9 @@ jobs:
           echo "签到完成，结果已写入 index.md"
 
           # 把 index.md 内容写到当前 step 的输出 DETAIL 里，供推送使用
-          {
-            echo "DETAIL<<'EOF'"
-            cat index.md
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
+          echo "DETAIL<<EOF"
+          cat index.md
+          echo "EOF" >> $GITHUB_OUTPUT
 
       # 5. 提交 index.md（方便在仓库里查看签到记录）
       - name: Commit changes

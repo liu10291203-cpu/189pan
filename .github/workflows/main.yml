@@ -10,11 +10,17 @@ on:
 jobs:
   checkin:
     runs-on: ubuntu-latest
+    # 允许这个工作流往仓库里写入 index.md
+    permissions:
+      contents: write
 
     steps:
       # 1. 拉取仓库代码
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          # 多拉一点历史，避免分叉时出问题
+          fetch-depth: 2
 
       # 2. 安装 Python
       - name: Set up Python
@@ -28,7 +34,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # 4. 运行签到脚本，输出到 index.md
+      # 4. 运行签到脚本，输出到 index.md，并把内容传给后面的推送步骤
       - name: Run check-in script
         id: checkin
         env:
@@ -36,9 +42,16 @@ jobs:
           TYYP_PSW: ${{ secrets.TYYP_PSW }}
         run: |
           echo "开始天翼云盘签到..."
-          # 仓库自带的 main.py 会根据 TYYP_USERNAME/TYYP_PSW 自动处理多账号和签到
+          # 仓库自带的 main.py 会根据 TYYP_USERNAME/TYYP_PSW 自动处理账号和签到
           python main.py > index.md
           echo "签到完成，结果已写入 index.md"
+
+          # 把 index.md 内容写到当前 step 的输出 DETAIL 里，供推送使用
+          {
+            echo "DETAIL<<'EOF'"
+            cat index.md
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
       # 5. 提交 index.md（方便在仓库里查看签到记录）
       - name: Commit changes
@@ -47,6 +60,8 @@ jobs:
           commit_message: "🤖 自动签到更新"
           file_pattern: "index.md"
           skip_dirty_check: true
+          # 避免你点 Re-run 时出现分叉推不上去，直接强制覆盖
+          push_options: "--force"
 
       # 6. PushPlus 推送提醒（成功或失败都会发）
       - name: Push notification (PushPlus)
@@ -64,16 +79,7 @@ jobs:
             运行日志地址：
             https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
-            详细签到信息会写入本仓库根目录下的 index.md 文件，可在 GitHub 上查看。
+            下面是本次详细签到结果（index.md 内容）：
 
-            **签到结果：**
-            账号 138xxxx1234  
-            ✔ 签到成功  
-            ⏱ 时间：08:27  
-            📦 获得空间：+59M  
-
-            **抽奖结果：**  
-            ❌ 第1次：抽奖失败，次数不足  
-            ❌ 第2次：抽奖失败，次数不足  
-            ❌ 第3次：抽奖失败，次数不足
+            ${{ steps.checkin.outputs.DETAIL }}
           PUSH_PLUS_TOKEN: ${{ secrets.PUSH_PLUS_TOKEN }}

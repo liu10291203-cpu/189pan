@@ -36,10 +36,11 @@ jobs:
           TYYP_PSW: ${{ secrets.TYYP_PSW }}
         run: |
           echo "开始天翼云盘签到..."
+          # 仓库自带的 main.py 会根据 TYYP_USERNAME/TYYP_PSW 自动处理多账号和签到
           python main.py > index.md
           echo "签到完成，结果已写入 index.md"
 
-      # 5. 提交 index.md
+      # 5. 提交 index.md（方便在仓库里查看签到记录）
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
@@ -47,7 +48,7 @@ jobs:
           file_pattern: "index.md"
           skip_dirty_check: true
 
-      # 6. PushPlus 推送提醒
+      # 6. PushPlus 推送提醒（成功或失败都会发）
       - name: Push notification (PushPlus)
         if: always()
         uses: dext7r/pushNotifications@v1.0.3

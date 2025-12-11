@@ -65,4 +65,15 @@ jobs:
             https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
             详细签到信息会写入本仓库根目录下的 index.md 文件，可在 GitHub 上查看。
+
+            **签到结果：**
+            账号 138xxxx1234  
+            ✔ 签到成功  
+            ⏱ 时间：08:27  
+            📦 获得空间：+59M  
+
+            **抽奖结果：**  
+            ❌ 第1次：抽奖失败，次数不足  
+            ❌ 第2次：抽奖失败，次数不足  
+            ❌ 第3次：抽奖失败，次数不足
           PUSH_PLUS_TOKEN: ${{ secrets.PUSH_PLUS_TOKEN }}

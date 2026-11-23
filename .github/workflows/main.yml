@@ -19,16 +19,30 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Check today's status
+        id: check
+        run: |
+          TODAY=$(date +%Y/%m/%d)
+          if [ "${{ github.event_name }}" = "schedule" ] && grep -q "最后更新:.*$TODAY" index.md && grep -Eq "成功账户：([0-9]+)/\1" index.md; then
+            echo "already=true" >> "$GITHUB_OUTPUT"
+            echo "今天已确认签到成功，跳过本次运行"
+          else
+            echo "already=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Setup Node.js
+        if: steps.check.outputs.already != 'true'
         uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: npm
 
       - name: Install dependencies
+        if: steps.check.outputs.already != 'true'
         run: npm ci
 
       - name: Run check-in
+        if: steps.check.outputs.already != 'true'
         env:
           TYYP_USERNAME: ${{ secrets.TYYP_USERNAME }}
           TYYP_PSW: ${{ secrets.TYYP_PSW }}
@@ -36,7 +50,7 @@ jobs:
         run: node checkin.js
 
       - name: Commit result
-        if: success()
+        if: success() && steps.check.outputs.already != 'true'
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "🤖 自动签到更新"
